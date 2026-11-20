@@ -240,6 +240,7 @@
       .page-heading { margin-top: 35px; }
     }
     @media (max-width: 650px) {
+      .mobile-only { display: inline-flex; }
       .app-shell { display: block; padding-bottom: 76px; }
       .sidebar { display: none; }
       main { padding: 18px 17px 38px; }
@@ -331,7 +332,7 @@
 
       <section class="page-heading">
         <div>
-          <p class="eyebrow">A LITTLE SPACE FOR BIG IDEAS</p>
+          <p class="eyebrow" id="eyebrow">A LITTLE SPACE FOR BIG IDEAS</p>
           <h1 id="pageTitle">All notes</h1>
           <p class="page-description" id="pageDescription">Everything you want to remember, all in one place.</p>
         </div>
@@ -595,7 +596,7 @@
       $('titleField').value = note ? note.title : '';
       $('bodyField').value = note ? note.content : '';
       $('labelField').value = note ? note.label : '';
-      $('pinCheckbox').selected = note ? note.pinned : false;
+      $('pinCheckbox').checked = note ? note.pinned : false;
       setColor(note ? note.color : 'default');
       $('saveStatus').textContent = 'Saved locally';
       $('editorDialog').show();
@@ -619,7 +620,7 @@
             content: content,
             label: $('labelField').value.trim(),
             color: selectedColor,
-            pinned: Boolean($('pinCheckbox').selected),
+            pinned: Boolean($('pinCheckbox').checked),
             updatedAt: now
           });
         }
