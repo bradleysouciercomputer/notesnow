@@ -59,6 +59,7 @@
     }
 
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
 
     html, body {
       min-width: 320px;
@@ -481,17 +482,6 @@
 
     $('noteDialog').addEventListener('cancel', () => {
       editingId = null;
-    });
-
-    document.addEventListener('keydown', (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'n') {
-        event.preventDefault();
-        openEditor();
-      }
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && $('noteDialog').open) {
-        event.preventDefault();
-        saveCurrentNote();
-      }
     });
 
     renderNotes();
