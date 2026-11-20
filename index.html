@@ -599,7 +599,7 @@
       $('pinCheckbox').checked = note ? note.pinned : false;
       setColor(note ? note.color : 'default');
       $('saveStatus').textContent = 'Saved locally';
-      $('editorDialog').show();
+      $('editorDialog').open = true;
       requestAnimationFrame(() => $('titleField').focus());
     }
 
@@ -639,7 +639,7 @@
         });
       }
       persist();
-      $('editorDialog').close();
+      $('editorDialog').open = false;
       render();
       showToast(editingId ? 'Note updated' : 'Note saved');
       editingId = null;
