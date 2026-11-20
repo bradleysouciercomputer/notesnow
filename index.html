@@ -176,6 +176,7 @@
     .note-title { margin: 10px 0 8px; font-size: 16px; font-weight: 700; letter-spacing: -.32px; line-height: 1.35; overflow-wrap: anywhere; }
     .note-preview { margin: 0; color: var(--md-sys-color-on-surface-variant); font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
     .note-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 16px; }
+    .note-label-set { display: inline-flex; max-width: 145px; }
     .note-label { max-width: 145px; --md-assist-chip-container-shape: var(--md-sys-shape-corner-full); --md-assist-chip-container-height: 28px; --md-assist-chip-label-text-size: 11px; --md-assist-chip-label-text-weight: 600; --md-assist-chip-outline-color: transparent; --md-assist-chip-container-color: var(--md-sys-color-secondary-container); --md-assist-chip-label-text-color: var(--md-sys-color-on-secondary-container); }
     .note-footer-hint { color: var(--md-sys-color-on-surface-variant); opacity: .65; font-size: 10px; }
     .empty-state { grid-column: 1 / -1; min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 44px 20px; }
@@ -325,7 +326,7 @@
       <section class="page-heading">
         <div>
           <p class="eyebrow" id="eyebrow">A LITTLE SPACE FOR BIG IDEAS</p>
-          <h1 id="pageTitle">All notes</h1>
+          <h1 class="md-typescale-headline-large" id="pageTitle">All notes</h1>
           <p class="page-description" id="pageDescription">Everything you want to remember, all in one place.</p>
         </div>
         <div class="sort-wrap">
@@ -514,9 +515,9 @@
       const preview = note.content ? escapeHTML(note.content) : '<span class="note-footer-hint">No additional text</span>';
       return '<article class="note-card" data-color="' + escapeHTML(note.color) + '" data-note-id="' + escapeHTML(note.id) + '" tabindex="0" role="button" aria-label="Open note: ' + escapeHTML(note.title || 'Untitled note') + '">' +
         '<div class="note-card-top"><span class="note-date">' + formatDate(note.updatedAt) + (note.pinned && !isTrash ? '<span class="note-pinned"><md-icon>push_pin</md-icon></span>' : '') + '</span><div class="note-actions">' + actions + '</div></div>' +
-        '<h2 class="note-title">' + escapeHTML(note.title || 'Untitled note') + '</h2>' +
-        '<p class="note-preview">' + preview + '</p>' +
-        '<div class="note-card-footer">' + (note.label ? '<md-assist-chip class="note-label" label="' + escapeHTML(note.label) + '" disabled></md-assist-chip>' : '<span></span>') +
+        '<h2 class="note-title md-typescale-title-medium">' + escapeHTML(note.title || 'Untitled note') + '</h2>' +
+        '<p class="note-preview md-typescale-body-medium">' + preview + '</p>' +
+        '<div class="note-card-footer">' + (note.label ? '<md-chip-set class="note-label-set"><md-assist-chip class="note-label" label="' + escapeHTML(note.label) + '" disabled></md-assist-chip></md-chip-set>' : '<span></span>') +
         '<span class="note-footer-hint">' + (isTrash ? 'In trash' : note.archived ? 'Archived' : 'Open note') + '</span></div></article>';
     }
 
