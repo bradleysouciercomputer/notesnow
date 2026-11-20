@@ -7,6 +7,7 @@ A simple notes website built with Google's official Material Web components.
 - Create notes with a title and written content
 - Open an existing note to edit it
 - Save notes in the current browser using local storage
+- Switch between light and dark Material 3 themes
 
 ## GitHub Pages
 
