@@ -192,7 +192,19 @@
       color: var(--md-sys-color-on-primary-container);
     }
 
-    .empty-icon md-icon { font-size: 34px; }
+    .empty-icon { overflow: visible; }
+
+    .empty-icon md-icon {
+      display: inline-flex;
+      width: 1.3em;
+      min-width: 1.3em;
+      height: 1.3em;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      flex: 0 0 auto;
+      font-size: 34px;
+    }
     .empty-state h2 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -.2px; }
     .empty-state p {
       max-width: 330px;
