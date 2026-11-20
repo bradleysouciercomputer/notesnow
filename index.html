@@ -181,14 +181,14 @@
 
     .notes-list {
       width: 100%;
-      padding: 8px;
+      padding: 0;
       border-radius: var(--md-sys-shape-corner-extra-large);
       background: var(--md-sys-color-surface-container-low);
       overflow: hidden;
     }
 
     .notes-list md-list-item {
-      border-radius: var(--md-sys-shape-corner-large);
+      border-radius: 0;
       --md-list-item-label-text-font: "Roboto";
       --md-list-item-supporting-text-font: "Roboto";
       --md-list-item-label-text-size: 16px;
@@ -197,18 +197,47 @@
       --md-list-item-supporting-text-color: var(--md-sys-color-on-surface-variant);
       --md-list-item-one-line-container-height: 64px;
       --md-list-item-two-line-container-height: 80px;
-      --md-list-item-container-shape: var(--md-sys-shape-corner-large);
+    }
+
+    /* The hover/ripple layer fills each row edge-to-edge. Only the outside
+       corners follow the rounded edge of the overall notes container. */
+    .notes-list md-list-item:first-child {
+      border-start-start-radius: var(--md-sys-shape-corner-extra-large);
+      border-start-end-radius: var(--md-sys-shape-corner-extra-large);
+    }
+
+    .notes-list md-list-item:last-child {
+      border-end-start-radius: var(--md-sys-shape-corner-extra-large);
+      border-end-end-radius: var(--md-sys-shape-corner-extra-large);
+    }
+
+    .notes-list md-list-item:first-child:last-child {
+      border-radius: var(--md-sys-shape-corner-extra-large);
     }
 
     .notes-list md-list-item::part(focus-ring) {
-      --md-focus-ring-shape: var(--md-sys-shape-corner-large);
+      --md-focus-ring-shape: 0px;
+    }
+
+    .notes-list md-list-item:first-child::part(focus-ring) {
+      --md-focus-ring-shape-start-start: var(--md-sys-shape-corner-extra-large);
+      --md-focus-ring-shape-start-end: var(--md-sys-shape-corner-extra-large);
+    }
+
+    .notes-list md-list-item:last-child::part(focus-ring) {
+      --md-focus-ring-shape-end-start: var(--md-sys-shape-corner-extra-large);
+      --md-focus-ring-shape-end-end: var(--md-sys-shape-corner-extra-large);
+    }
+
+    .notes-list md-list-item:first-child:last-child::part(focus-ring) {
+      --md-focus-ring-shape: var(--md-sys-shape-corner-extra-large);
     }
 
     .notes-list md-divider {
       display: flex;
       box-sizing: border-box;
-      width: calc(100% + 16px);
-      margin: 4px 0 4px -8px;
+      width: 100%;
+      margin: 0;
       --md-divider-color: var(--md-sys-color-outline-variant);
     }
 
