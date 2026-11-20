@@ -19,7 +19,9 @@ A clean, personal notes workspace built with Google's official Material 3 Web Co
 
 This is a static website. Open `index.html` through a local web server, or publish the repository with GitHub Pages. There is no build step and no backend is required.
 
-The app uses the official `@material/web` package from the `esm.run` CDN and Google Fonts for typography and icons.
+The app uses the official `@material/web` package from the `esm.run` CDN, with Google's Roboto typeface and Material Symbols.
+
+Interactive controls use official Material Web components (buttons, FABs, chips, selects, text fields, checkboxes, dialogs, and icon buttons). Material Web does not currently ship dedicated card, navigation-drawer, or snackbar components, so those app-specific surfaces are composed from Material 3 system color, typography, and shape tokens rather than being presented as library components.
 
 ## GitHub Pages
 
