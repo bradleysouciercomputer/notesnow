@@ -204,6 +204,14 @@
       --md-divider-color: var(--md-sys-color-outline-variant);
     }
 
+    .notes-list md-icon-button {
+      --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .notes-list md-icon-button:hover {
+      --md-icon-button-icon-color: var(--md-sys-color-error);
+    }
+
     .empty-state {
       min-height: 310px;
       display: flex;
@@ -502,6 +510,7 @@
         return '<md-list-item type="button" data-note-id="' + escapeHTML(note.id) + '">' +
           '<div slot="headline">' + title + '</div>' +
           (preview ? '<div slot="supporting-text">' + preview + '</div>' : '') +
+          '<md-icon-button slot="end" data-delete-id="' + escapeHTML(note.id) + '" aria-label="Delete ' + title + '" title="Delete note"><md-icon>delete</md-icon></md-icon-button>' +
           '</md-list-item>';
       }).join('<md-divider></md-divider>');
 
@@ -565,6 +574,38 @@
     });
 
     $('notesList').addEventListener('click', (event) => {
+      const deleteButton = event.composedPath().find((node) =>
+        node instanceof HTMLElement && node.matches('md-icon-button[data-delete-id]')
+      );
+
+      if (deleteButton) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const id = deleteButton.dataset.deleteId;
+        const note = notes.find((item) => item.id === id);
+        if (!note) return;
+
+        const noteName = note.title.trim() || 'Untitled note';
+        if (!window.confirm('Delete "' + noteName + '"?')) return;
+
+        const previousNotes = notes;
+        notes = notes.filter((item) => item.id !== id);
+        if (!saveNotes()) {
+          notes = previousNotes;
+          return;
+        }
+
+        if (editingId === id) {
+          $('noteDialog').open = false;
+          editingId = null;
+        }
+
+        renderNotes();
+        showMessage('Note deleted');
+        return;
+      }
+
       const item = event.target.closest('md-list-item[data-note-id]');
       if (item) openEditor(item.dataset.noteId);
     });
