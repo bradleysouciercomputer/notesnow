@@ -302,7 +302,33 @@
 
     .body-field::part(text-field) { min-height: 270px; }
 
-    .note-dialog [slot="actions"] { padding: 0 24px 22px; }
+    .note-dialog [slot="actions"],
+    .delete-dialog [slot="actions"] { padding: 0 24px 22px; }
+
+    .delete-dialog {
+      width: min(420px, calc(100vw - 28px));
+      max-width: 420px;
+      --md-dialog-container-color: var(--md-sys-color-surface-container-low);
+      --md-dialog-container-shape: var(--md-sys-shape-corner-extra-large);
+    }
+
+    .delete-message {
+      margin: 0;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .delete-dialog md-filled-button {
+      --md-filled-button-container-height: 40px;
+      --md-filled-button-container-shape: var(--md-sys-shape-corner-full);
+      --md-filled-button-container-color: var(--md-sys-color-error);
+      --md-filled-button-label-text-color: var(--md-sys-color-on-error);
+    }
+
+    .delete-dialog md-text-button {
+      --md-text-button-container-shape: var(--md-sys-shape-corner-full);
+    }
     .note-dialog md-filled-button {
       --md-filled-button-container-height: 40px;
       --md-filled-button-container-shape: var(--md-sys-shape-corner-full);
@@ -344,7 +370,8 @@
       .new-note-fab { --md-fab-container-height: 44px; }
       .editor-fields { min-width: 0; }
       .body-field::part(text-field) { min-height: 220px; }
-      .note-dialog [slot="actions"] { padding: 0 14px 15px; }
+      .note-dialog [slot="actions"],
+      .delete-dialog [slot="actions"] { padding: 0 14px 15px; }
       .snackbar { bottom: 18px; }
     }
 
@@ -400,6 +427,17 @@
     </div>
   </md-dialog>
 
+  <md-dialog class="delete-dialog" id="deleteDialog" aria-labelledby="deleteDialogTitle">
+    <div slot="headline" class="dialog-headline" id="deleteDialogTitle">Delete note?</div>
+    <div slot="content">
+      <p class="delete-message" id="deleteDialogMessage">This note will be permanently deleted. This action can't be undone.</p>
+    </div>
+    <div slot="actions">
+      <md-text-button id="cancelDeleteButton">Cancel</md-text-button>
+      <md-filled-button id="confirmDeleteButton">Delete</md-filled-button>
+    </div>
+  </md-dialog>
+
   <div class="snackbar" id="snackbar" role="status" aria-live="polite"></div>
 
   <script type="module">
@@ -442,6 +480,7 @@
 
     let notes = loadNotes();
     let editingId = null;
+    let pendingDeleteId = null;
     let toastTimeout = null;
 
     function loadNotes() {
@@ -586,28 +625,57 @@
         const note = notes.find((item) => item.id === id);
         if (!note) return;
 
+        pendingDeleteId = id;
         const noteName = note.title.trim() || 'Untitled note';
-        if (!window.confirm('Delete "' + noteName + '"?')) return;
-
-        const previousNotes = notes;
-        notes = notes.filter((item) => item.id !== id);
-        if (!saveNotes()) {
-          notes = previousNotes;
-          return;
-        }
-
-        if (editingId === id) {
-          $('noteDialog').open = false;
-          editingId = null;
-        }
-
-        renderNotes();
-        showMessage('Note deleted');
+        $('deleteDialogMessage').textContent =
+          '"' + noteName + '" will be permanently deleted. This action cannot be undone.';
+        $('deleteDialog').open = true;
         return;
       }
 
       const item = event.target.closest('md-list-item[data-note-id]');
       if (item) openEditor(item.dataset.noteId);
+    });
+
+    function deletePendingNote() {
+      if (!pendingDeleteId) return;
+
+      const id = pendingDeleteId;
+      const note = notes.find((item) => item.id === id);
+      if (!note) {
+        pendingDeleteId = null;
+        $('deleteDialog').open = false;
+        return;
+      }
+
+      const previousNotes = notes;
+      notes = notes.filter((item) => item.id !== id);
+      if (!saveNotes()) {
+        notes = previousNotes;
+        return;
+      }
+
+      pendingDeleteId = null;
+      $('deleteDialog').open = false;
+
+      if (editingId === id) {
+        $('noteDialog').open = false;
+        editingId = null;
+      }
+
+      renderNotes();
+      showMessage('Note deleted');
+    }
+
+    $('cancelDeleteButton').addEventListener('click', () => {
+      pendingDeleteId = null;
+      $('deleteDialog').open = false;
+    });
+
+    $('confirmDeleteButton').addEventListener('click', deletePendingNote);
+
+    $('deleteDialog').addEventListener('cancel', () => {
+      pendingDeleteId = null;
     });
 
     $('noteDialog').addEventListener('cancel', () => {
