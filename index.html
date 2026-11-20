@@ -188,6 +188,7 @@
     }
 
     .notes-list md-list-item {
+      border-radius: var(--md-sys-shape-corner-large);
       --md-list-item-label-text-font: "Roboto";
       --md-list-item-supporting-text-font: "Roboto";
       --md-list-item-label-text-size: 16px;
@@ -197,6 +198,10 @@
       --md-list-item-one-line-container-height: 64px;
       --md-list-item-two-line-container-height: 80px;
       --md-list-item-container-shape: var(--md-sys-shape-corner-large);
+    }
+
+    .notes-list md-list-item::part(focus-ring) {
+      --md-focus-ring-shape: var(--md-sys-shape-corner-large);
     }
 
     .notes-list md-divider {
