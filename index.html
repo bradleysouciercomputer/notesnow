@@ -163,6 +163,99 @@
       --md-fab-container-shape: var(--md-sys-shape-corner-large);
     }
 
+    .account-email {
+      max-width: min(260px, 28vw);
+      overflow: hidden;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 13px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #signOutButton {
+      --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .auth-view {
+      min-height: min(690px, calc(100vh - 150px));
+      display: grid;
+      place-items: center;
+      padding: 26px 0 54px;
+    }
+
+    .auth-card {
+      display: grid;
+      gap: 18px;
+      width: min(100%, 440px);
+      padding: clamp(25px, 5vw, 38px);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: var(--md-sys-shape-corner-extra-large);
+      background: var(--md-sys-color-surface-container-low);
+    }
+
+    .auth-card-icon {
+      display: grid;
+      width: 56px;
+      height: 56px;
+      place-items: center;
+      border-radius: 18px;
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+
+    .auth-card-icon md-icon { font-size: 29px; }
+
+    .auth-card h1 {
+      margin: 0;
+      color: var(--md-sys-color-on-surface);
+      font-size: 28px;
+      font-weight: 400;
+      line-height: 36px;
+      letter-spacing: -.5px;
+    }
+
+    .auth-description {
+      margin: -9px 0 1px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 14px;
+      line-height: 21px;
+    }
+
+    .auth-fields { display: grid; gap: 14px; }
+
+    .auth-fields md-outlined-text-field {
+      width: 100%;
+      --md-outlined-text-field-container-shape: var(--md-sys-shape-corner-large);
+    }
+
+    .auth-submit {
+      width: 100%;
+      --md-filled-button-container-height: 48px;
+      --md-filled-button-container-shape: var(--md-sys-shape-corner-full);
+    }
+
+    .auth-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px 12px;
+    }
+
+    .auth-links md-text-button {
+      --md-text-button-container-shape: var(--md-sys-shape-corner-full);
+    }
+
+    .auth-message {
+      min-height: 20px;
+      margin: -3px 0 0;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 13px;
+      line-height: 20px;
+    }
+
+    .auth-message[data-kind="error"] { color: var(--md-sys-color-error); }
+
     main {
       width: min(100% - 40px, 900px);
       margin: 0 auto;
@@ -472,6 +565,10 @@
 
     @media (max-width: 600px) {
       .app-bar { height: 64px; padding: 0 17px; }
+      .account-email { display: none; }
+      .auth-view { min-height: calc(100vh - 118px); padding-top: 12px; }
+      .auth-card { padding: 24px 20px; }
+      .auth-links { justify-content: flex-start; }
       main { width: calc(100% - 32px); padding-top: 36px; }
       .page-heading { margin-bottom: 20px; }
       .new-note-fab { --md-fab-container-height: 44px; }
@@ -498,17 +595,40 @@
       <md-icon-button class="theme-toggle" id="themeToggle" aria-label="Switch to dark mode" title="Switch to dark mode">
         <md-icon id="themeIcon">dark_mode</md-icon>
       </md-icon-button>
-      <md-fab class="new-note-fab" label="New note" variant="primary" id="newNoteButton" aria-label="Create a new note">
+      <span class="account-email" id="accountEmail" hidden></span>
+      <md-icon-button id="signOutButton" aria-label="Sign out" title="Sign out" hidden>
+        <md-icon>logout</md-icon>
+      </md-icon-button>
+      <md-fab class="new-note-fab" label="New note" variant="primary" id="newNoteButton" aria-label="Create a new note" hidden>
         <md-icon slot="icon">add</md-icon>
       </md-fab>
     </div>
   </header>
 
   <main>
-    <section class="page-heading">
-      <h1 class="md-typescale-headline-large">Your notes</h1>
+    <section class="auth-view" id="authView" aria-labelledby="authHeading">
+      <div class="auth-card">
+        <div class="auth-card-icon"><md-icon>cloud_sync</md-icon></div>
+        <h1 id="authHeading">Welcome to NotesNow</h1>
+        <p class="auth-description" id="authDescription">Sign in to access your notes from any device.</p>
+        <div class="auth-fields">
+          <md-outlined-text-field id="authEmail" label="Email" type="email" autocomplete="email" required></md-outlined-text-field>
+          <md-outlined-text-field id="authPassword" label="Password" type="password" autocomplete="current-password" required minlength="6"></md-outlined-text-field>
+        </div>
+        <md-filled-button class="auth-submit" id="authSubmitButton">Sign in</md-filled-button>
+        <div class="auth-links">
+          <md-text-button id="authModeToggleButton">Create an account</md-text-button>
+          <md-text-button id="forgotPasswordButton">Forgot password?</md-text-button>
+        </div>
+        <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
+      </div>
     </section>
-    <section id="notesArea" aria-label="Your notes">
+
+    <section id="notesContent" hidden>
+      <section class="page-heading">
+        <h1 class="md-typescale-headline-large">Your notes</h1>
+      </section>
+      <section id="notesArea" aria-label="Your notes">
       <div class="empty-state" id="emptyState">
         <div class="empty-icon"><md-icon>edit_note</md-icon></div>
         <h2>No notes yet</h2>
@@ -519,6 +639,7 @@
         </md-filled-button>
       </div>
       <md-list class="notes-list" id="notesList" aria-label="Saved notes" hidden></md-list>
+      </section>
     </section>
   </main>
 
@@ -577,11 +698,23 @@
   <script type="module">
     import '@material/web/all.js';
     import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
+    import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.119.0';
 
     document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
 
     const STORAGE_KEY = 'notesnow-notes-v1';
+    const LOCAL_IMPORT_KEY = 'notesnow-local-import-checked-v1';
     const THEME_KEY = 'notesnow-theme-v1';
+    const SUPABASE_URL = 'https://hpntwpdqvyfcnwldslmk.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hGsKruQPZFkQzfVO7cZMJg_x_erN1Zd';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
+    const AUTH_REDIRECT_URL = window.location.origin + window.location.pathname;
     const $ = (id) => document.getElementById(id);
     const createId = () => crypto.randomUUID ? crypto.randomUUID() : 'note-' + Date.now() + '-' + Math.random().toString(36).slice(2);
 
@@ -612,12 +745,16 @@
     }
     applyTheme(savedTheme, false);
 
-    let notes = loadNotes();
+    let notes = [];
+    let currentUser = null;
+    let loadedUserId = null;
+    let notesLoading = false;
+    let authMode = 'signin';
     let editingId = null;
     let pendingDeleteId = null;
     let toastTimeout = null;
 
-    function loadNotes() {
+    function loadLegacyNotes() {
       try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         if (!Array.isArray(stored)) return [];
@@ -629,19 +766,8 @@
             content: String(note.content || '')
           }));
       } catch (error) {
-        console.error('Could not load notes:', error);
+        console.error('Could not read existing browser notes:', error);
         return [];
-      }
-    }
-
-    function saveNotes() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-        return true;
-      } catch (error) {
-        console.error('Could not save notes:', error);
-        showMessage('Could not save this note in browser storage.');
-        return false;
       }
     }
 
@@ -671,6 +797,11 @@
       const empty = notes.length === 0;
       $('emptyState').hidden = !empty;
       $('notesList').hidden = empty;
+      $('emptyState').querySelector('h2').textContent = notesLoading ? 'Loading notes...' : 'No notes yet';
+      $('emptyState').querySelector('p').textContent = notesLoading
+        ? 'Syncing your notes from the cloud.'
+        : 'Create your first note to get started.';
+      $('emptyNewNoteButton').hidden = notesLoading;
 
       if (empty) {
         $('notesList').replaceChildren();
@@ -704,6 +835,147 @@
       });
     }
 
+    function setAuthMessage(message, kind = 'info') {
+      const element = $('authMessage');
+      element.textContent = message;
+      element.dataset.kind = kind;
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const isSignUp = mode === 'signup';
+      $('authHeading').textContent = isSignUp ? 'Create your account' : 'Welcome to NotesNow';
+      $('authDescription').textContent = isSignUp
+        ? 'Create an account to keep your notes safely in the cloud.'
+        : 'Sign in to access your notes from any device.';
+      $('authSubmitButton').textContent = isSignUp ? 'Create account' : 'Sign in';
+      $('authModeToggleButton').textContent = isSignUp ? 'Already have an account? Sign in' : 'Create an account';
+      $('authPassword').autocomplete = isSignUp ? 'new-password' : 'current-password';
+      $('forgotPasswordButton').hidden = isSignUp;
+      setAuthMessage('');
+    }
+
+    function setAuthenticatedView(user) {
+      const signedIn = Boolean(user);
+      $('authView').hidden = signedIn;
+      $('notesContent').hidden = !signedIn;
+      $('newNoteButton').hidden = !signedIn;
+      $('signOutButton').hidden = !signedIn;
+      $('accountEmail').hidden = !signedIn || !user.email;
+      $('accountEmail').textContent = user?.email || '';
+    }
+
+    async function fetchCloudNotes() {
+      return supabase
+        .from('notes')
+        .select('id, title, content, created_at, updated_at')
+        .order('updated_at', {ascending: false});
+    }
+
+    async function loadCloudNotes(user) {
+      notesLoading = true;
+      renderNotes();
+
+      let {data, error} = await fetchCloudNotes();
+      if (error) {
+        console.error('Could not load cloud notes:', error);
+        notesLoading = false;
+        renderNotes();
+        showMessage('Could not load your notes. Check your connection and try again.');
+        return;
+      }
+
+      let importChecked = false;
+      try {
+        importChecked = localStorage.getItem(LOCAL_IMPORT_KEY) === 'true';
+      } catch (storageError) {
+        console.warn('Could not check browser note import status:', storageError);
+        importChecked = true;
+      }
+
+      if (!importChecked) {
+        const legacyNotes = loadLegacyNotes();
+        if (legacyNotes.length && data.length === 0) {
+          const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+          const migratedNotes = legacyNotes.map((note) => ({
+            id: uuidPattern.test(note.id) ? note.id : createId(),
+            user_id: user.id,
+            title: note.title.slice(0, 160),
+            content: note.content
+          }));
+
+          const {error: importError} = await supabase.from('notes').upsert(migratedNotes, {onConflict: 'id'});
+          if (importError) {
+            console.error('Could not import browser notes:', importError);
+            showMessage('Your previous notes are still on this device; cloud import failed.');
+          } else {
+            try {
+              localStorage.setItem(LOCAL_IMPORT_KEY, 'true');
+              localStorage.removeItem(STORAGE_KEY);
+            } catch (storageError) {
+              console.warn('Could not update local note import status:', storageError);
+            }
+            showMessage('Your existing notes were moved to the cloud.');
+            const refreshed = await fetchCloudNotes();
+            data = refreshed.data || [];
+            error = refreshed.error;
+          }
+        } else {
+          try {
+            localStorage.setItem(LOCAL_IMPORT_KEY, 'true');
+          } catch (storageError) {
+            console.warn('Could not save local note import status:', storageError);
+          }
+          if (legacyNotes.length && data.length) {
+            showMessage('Older browser notes were left on this device; this account already has cloud notes.');
+          }
+        }
+      }
+
+      if (currentUser?.id !== user.id) return;
+      if (error) {
+        console.error('Could not refresh imported notes:', error);
+        notesLoading = false;
+        renderNotes();
+        showMessage('Your notes were uploaded, but could not be refreshed. Reload the page.');
+        return;
+      }
+
+      notes = (data || []).map((note) => ({
+        id: note.id,
+        title: note.title || '',
+        content: note.content || '',
+        created_at: note.created_at,
+        updated_at: note.updated_at
+      }));
+      notesLoading = false;
+      renderNotes();
+    }
+
+    async function applyAuthSession(session) {
+      const user = session?.user || null;
+      currentUser = user;
+      setAuthenticatedView(user);
+
+      if (!user) {
+        loadedUserId = null;
+        notesLoading = false;
+        notes = [];
+        editingId = null;
+        pendingDeleteId = null;
+        $('noteDialog').open = false;
+        $('deleteDialog').open = false;
+        $('detailsDialog').open = false;
+        renderNotes();
+        return;
+      }
+
+      if (loadedUserId === user.id) return;
+      loadedUserId = user.id;
+      notes = [];
+      await loadCloudNotes(user);
+    }
+
     function openEditor(id = null) {
       const note = id ? notes.find((item) => item.id === id) : null;
       editingId = note ? note.id : null;
@@ -715,41 +987,166 @@
       requestAnimationFrame(() => $('noteTitle').focus());
     }
 
-    function saveCurrentNote() {
+    async function saveCurrentNote() {
       const title = $('noteTitle').value.trim();
-      const content = $('noteContent').value.trim();
-
-      if (!title && !content) {
+      const content = $('noteContent').value;
+      if (!title && !content.trim()) {
         showMessage('Write something before saving your note.');
         $('noteTitle').focus();
         return;
       }
+      if (!currentUser) return;
 
-      if (editingId) {
-        const note = notes.find((item) => item.id === editingId);
-        if (note) {
-          note.title = title;
-          note.content = $('noteContent').value;
+      const button = $('saveButton');
+      if (button.disabled) return;
+      button.disabled = true;
+      const originalLabel = button.textContent;
+      button.textContent = 'Saving...';
+
+      try {
+        let result;
+        if (editingId) {
+          result = await supabase
+            .from('notes')
+            .update({title, content})
+            .eq('id', editingId)
+            .select('id, title, content, created_at, updated_at')
+            .single();
+        } else {
+          result = await supabase
+            .from('notes')
+            .insert({title, content})
+            .select('id, title, content, created_at, updated_at')
+            .single();
         }
-      } else {
-        notes.unshift({
-          id: createId(),
-          title,
-          content: $('noteContent').value
-        });
+
+        if (result.error) throw result.error;
+        if (!result.data) throw new Error('The note was not saved.');
+
+        const savedNote = result.data;
+        notes = notes.filter((note) => note.id !== savedNote.id);
+        notes.push(savedNote);
+        notes.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+        $('noteDialog').open = false;
+        editingId = null;
+        renderNotes();
+        showMessage('Note saved to the cloud');
+      } catch (error) {
+        console.error('Could not save cloud note:', error);
+        showMessage(error.message || 'Could not save this note. Try again.');
+      } finally {
+        button.disabled = false;
+        button.textContent = originalLabel;
       }
-
-      if (!saveNotes()) return;
-
-      $('noteDialog').open = false;
-      editingId = null;
-      renderNotes();
-      showMessage('Note saved');
     }
 
     $('themeToggle').addEventListener('click', () => {
       const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
       applyTheme(nextTheme);
+    });
+
+    $('authModeToggleButton').addEventListener('click', () => {
+      setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+    });
+
+    $('authSubmitButton').addEventListener('click', async () => {
+      const email = $('authEmail').value.trim();
+      const password = $('authPassword').value;
+      if (!email || !password) {
+        setAuthMessage('Enter your email address and password.', 'error');
+        return;
+      }
+      if (password.length < 6) {
+        setAuthMessage('Your password must be at least 6 characters.', 'error');
+        return;
+      }
+
+      const button = $('authSubmitButton');
+      button.disabled = true;
+      $('authModeToggleButton').disabled = true;
+      $('forgotPasswordButton').disabled = true;
+      button.textContent = authMode === 'signup' ? 'Creating account...' : 'Signing in...';
+      setAuthMessage('');
+
+      try {
+        if (authMode === 'signup') {
+          const {data, error} = await supabase.auth.signUp({
+            email,
+            password,
+            options: {emailRedirectTo: AUTH_REDIRECT_URL}
+          });
+          if (error) throw error;
+
+          if (data.session) {
+            setAuthMessage('Account created. Your notes are ready.');
+          } else {
+            setAuthMessage('Account created. Check your email for a confirmation link before signing in.');
+          }
+        } else {
+          const {error} = await supabase.auth.signInWithPassword({email, password});
+          if (error) throw error;
+        }
+      } catch (error) {
+        console.error('Authentication failed:', error);
+        setAuthMessage(error.message || 'Authentication failed. Please try again.', 'error');
+      } finally {
+        button.disabled = false;
+        $('authModeToggleButton').disabled = false;
+        $('forgotPasswordButton').disabled = false;
+        button.textContent = authMode === 'signup' ? 'Create account' : 'Sign in';
+      }
+    });
+
+    $('authEmail').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') $('authSubmitButton').click();
+    });
+    $('authPassword').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') $('authSubmitButton').click();
+    });
+
+    $('forgotPasswordButton').addEventListener('click', async () => {
+      const email = $('authEmail').value.trim();
+      if (!email) {
+        setAuthMessage('Enter your email address first.', 'error');
+        $('authEmail').focus();
+        return;
+      }
+
+      const button = $('forgotPasswordButton');
+      button.disabled = true;
+      try {
+        const {error} = await supabase.auth.resetPasswordForEmail(email, {redirectTo: AUTH_REDIRECT_URL});
+        if (error) throw error;
+        setAuthMessage('Password reset instructions have been sent to your email.');
+      } catch (error) {
+        console.error('Password reset request failed:', error);
+        setAuthMessage(error.message || 'Could not send password reset email.', 'error');
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $('signOutButton').addEventListener('click', async () => {
+      const {error} = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out failed:', error);
+        showMessage('Could not sign out. Please try again.');
+      }
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      window.setTimeout(() => { void applyAuthSession(session); }, 0);
+    });
+
+    setAuthMode('signin');
+    supabase.auth.getSession().then(({data, error}) => {
+      if (error) {
+        console.error('Could not restore your session:', error);
+        setAuthMessage('Could not restore your sign-in session. Please sign in again.', 'error');
+        return;
+      }
+      void applyAuthSession(data.session);
     });
 
     $('newNoteButton').addEventListener('click', () => openEditor());
@@ -817,34 +1214,41 @@
       $('deleteDialog').open = true;
     }
 
-    function deletePendingNote() {
-      if (!pendingDeleteId) return;
+    async function deletePendingNote() {
+      if (!pendingDeleteId || !currentUser) return;
 
       const id = pendingDeleteId;
-      const note = notes.find((item) => item.id === id);
-      if (!note) {
+      const button = $('confirmDeleteButton');
+      if (button.disabled) return;
+      button.disabled = true;
+
+      try {
+        const {data, error} = await supabase
+          .from('notes')
+          .delete()
+          .eq('id', id)
+          .select('id')
+          .single();
+        if (error) throw error;
+        if (!data) throw new Error('The note could not be found.');
+
+        notes = notes.filter((item) => item.id !== id);
         pendingDeleteId = null;
         $('deleteDialog').open = false;
-        return;
+
+        if (editingId === id) {
+          $('noteDialog').open = false;
+          editingId = null;
+        }
+
+        renderNotes();
+        showMessage('Note deleted from the cloud');
+      } catch (error) {
+        console.error('Could not delete cloud note:', error);
+        showMessage(error.message || 'Could not delete this note. Try again.');
+      } finally {
+        button.disabled = false;
       }
-
-      const previousNotes = notes;
-      notes = notes.filter((item) => item.id !== id);
-      if (!saveNotes()) {
-        notes = previousNotes;
-        return;
-      }
-
-      pendingDeleteId = null;
-      $('deleteDialog').open = false;
-
-      if (editingId === id) {
-        $('noteDialog').open = false;
-        editingId = null;
-      }
-
-      renderNotes();
-      showMessage('Note deleted');
     }
 
     $('closeDetailsButton').addEventListener('click', () => {
