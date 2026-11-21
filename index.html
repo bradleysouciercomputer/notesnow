@@ -241,12 +241,18 @@
       --md-divider-color: var(--md-sys-color-outline-variant);
     }
 
-    .notes-list md-icon-button {
+    .note-actions {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .notes-list .note-actions md-icon-button {
       --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
     }
 
-    .notes-list md-icon-button:hover {
-      --md-icon-button-icon-color: var(--md-sys-color-error);
+    .notes-list md-menu {
+      --md-menu-container-color: var(--md-sys-color-surface-container);
+      --md-menu-container-shape: var(--md-sys-shape-corner-small);
     }
 
     .empty-state {
@@ -583,14 +589,27 @@
       const markup = notes.map((note) => {
         const title = escapeHTML(note.title || 'Untitled note');
         const preview = escapeHTML(notePreview(note.content));
+        const triggerId = 'note-actions-trigger-' + note.id;
+        const menuId = 'note-actions-menu-' + note.id;
         return '<md-list-item type="button" data-note-id="' + escapeHTML(note.id) + '">' +
           '<div slot="headline">' + title + '</div>' +
           (preview ? '<div slot="supporting-text">' + preview + '</div>' : '') +
-          '<md-icon-button slot="end" data-delete-id="' + escapeHTML(note.id) + '" aria-label="Delete ' + title + '" title="Delete note"><md-icon>delete</md-icon></md-icon-button>' +
+          '<span slot="end" class="note-actions">' +
+            '<md-icon-button id="' + escapeHTML(triggerId) + '" data-menu-id="' + escapeHTML(menuId) + '" aria-label="Note actions for ' + title + '" aria-haspopup="menu" aria-expanded="false" title="Note actions"><md-icon>more_vert</md-icon></md-icon-button>' +
+            '<md-menu id="' + escapeHTML(menuId) + '" positioning="popover" anchor="' + escapeHTML(triggerId) + '" anchor-corner="end-end" menu-corner="end-start" aria-label="Note actions">' +
+              '<md-menu-item data-action="edit" data-note-id="' + escapeHTML(note.id) + '"><md-icon slot="start">edit</md-icon><div slot="headline">Edit</div></md-menu-item>' +
+              '<md-menu-item data-action="delete" data-note-id="' + escapeHTML(note.id) + '"><md-icon slot="start">delete</md-icon><div slot="headline">Delete</div></md-menu-item>' +
+            '</md-menu>' +
+          '</span>' +
           '</md-list-item>';
       }).join('<md-divider></md-divider>');
 
       $('notesList').innerHTML = markup;
+      $('notesList').querySelectorAll('md-menu').forEach((menu) => {
+        const trigger = $(menu.getAttribute('anchor'));
+        menu.addEventListener('opened', () => trigger?.setAttribute('aria-expanded', 'true'));
+        menu.addEventListener('closed', () => trigger?.setAttribute('aria-expanded', 'false'));
+      });
     }
 
     function openEditor(id = null) {
@@ -650,29 +669,43 @@
     });
 
     $('notesList').addEventListener('click', (event) => {
-      const deleteButton = event.composedPath().find((node) =>
-        node instanceof HTMLElement && node.matches('md-icon-button[data-delete-id]')
+      const menuAction = event.composedPath().find((node) =>
+        node instanceof HTMLElement && node.matches('md-menu-item[data-action][data-note-id]')
       );
 
-      if (deleteButton) {
+      if (menuAction) {
+        const id = menuAction.dataset.noteId;
+        if (menuAction.dataset.action === 'edit') openEditor(id);
+        if (menuAction.dataset.action === 'delete') requestDeleteNote(id);
+        return;
+      }
+
+      const menuTrigger = event.composedPath().find((node) =>
+        node instanceof HTMLElement && node.matches('md-icon-button[data-menu-id]')
+      );
+
+      if (menuTrigger) {
         event.preventDefault();
         event.stopPropagation();
-
-        const id = deleteButton.dataset.deleteId;
-        const note = notes.find((item) => item.id === id);
-        if (!note) return;
-
-        pendingDeleteId = id;
-        const noteName = note.title.trim() || 'Untitled note';
-        $('deleteDialogMessage').textContent =
-          '"' + noteName + '" will be permanently deleted. This action cannot be undone.';
-        $('deleteDialog').open = true;
+        const menu = $(menuTrigger.dataset.menuId);
+        if (menu) menu.open = !menu.open;
         return;
       }
 
       const item = event.target.closest('md-list-item[data-note-id]');
       if (item) openEditor(item.dataset.noteId);
     });
+
+    function requestDeleteNote(id) {
+      const note = notes.find((item) => item.id === id);
+      if (!note) return;
+
+      pendingDeleteId = id;
+      const noteName = note.title.trim() || 'Untitled note';
+      $('deleteDialogMessage').textContent =
+        '"' + noteName + '" will be permanently deleted. This action cannot be undone.';
+      $('deleteDialog').open = true;
+    }
 
     function deletePendingNote() {
       if (!pendingDeleteId) return;
