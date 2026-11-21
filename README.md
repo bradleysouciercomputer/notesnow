@@ -46,6 +46,8 @@ In the Supabase Dashboard, open **Authentication → URL Configuration** and set
 
 Email confirmation is enabled by default for hosted Supabase projects. New users need to confirm the email address before signing in when that setting is enabled.
 
+The built-in Supabase email sender is intended for testing: it only sends to project-organization team members and is limited to 2 emails per hour. For general users, configure a custom SMTP provider in Supabase. For a personal prototype where email verification is not needed, you can instead turn off **Confirm email** under **Authentication → Sign In / Providers → Email**. Turning this off allows sign-in without proving ownership of the email address.
+
 ## Existing browser notes
 
 When you first sign in, NotesNow checks for notes left by the previous local-storage version. If your new cloud account has no notes yet, it imports those notes into your account once. If the account already contains cloud notes, the older browser notes are left on that device rather than being silently mixed into the account.
