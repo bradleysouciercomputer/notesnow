@@ -844,14 +844,23 @@
     function setAuthMode(mode) {
       authMode = mode;
       const isSignUp = mode === 'signup';
-      $('authHeading').textContent = isSignUp ? 'Create your account' : 'Welcome to NotesNow';
-      $('authDescription').textContent = isSignUp
-        ? 'Create an account to keep your notes safely in the cloud.'
-        : 'Sign in to access your notes from any device.';
-      $('authSubmitButton').textContent = isSignUp ? 'Create account' : 'Sign in';
+      const isRecovery = mode === 'recovery';
+      $('authHeading').textContent = isRecovery
+        ? 'Choose a new password'
+        : isSignUp ? 'Create your account' : 'Welcome to NotesNow';
+      $('authDescription').textContent = isRecovery
+        ? 'Enter a new password for your NotesNow account.'
+        : isSignUp
+          ? 'Create an account to keep your notes safely in the cloud.'
+          : 'Sign in to access your notes from any device.';
+      $('authSubmitButton').textContent = isRecovery
+        ? 'Update password'
+        : isSignUp ? 'Create account' : 'Sign in';
+      $('authModeToggleButton').hidden = isRecovery;
       $('authModeToggleButton').textContent = isSignUp ? 'Already have an account? Sign in' : 'Create an account';
-      $('authPassword').autocomplete = isSignUp ? 'new-password' : 'current-password';
-      $('forgotPasswordButton').hidden = isSignUp;
+      $('authPassword').setAttribute('label', isRecovery ? 'New password' : 'Password');
+      $('authPassword').autocomplete = isSignUp || isRecovery ? 'new-password' : 'current-password';
+      $('forgotPasswordButton').hidden = mode !== 'signin';
       setAuthMessage('');
     }
 
@@ -1070,7 +1079,11 @@
       setAuthMessage('');
 
       try {
-        if (authMode === 'signup') {
+        if (authMode === 'recovery') {
+          const {error} = await supabase.auth.updateUser({password});
+          if (error) throw error;
+          setAuthMessage('Your password has been updated.');
+        } else if (authMode === 'signup') {
           const {data, error} = await supabase.auth.signUp({
             email,
             password,
@@ -1135,7 +1148,14 @@
       }
     });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        currentUser = session?.user || null;
+        setAuthenticatedView(null);
+        setAuthMode('recovery');
+        setAuthMessage('Enter a new password to finish resetting your account.');
+        return;
+      }
       window.setTimeout(() => { void applyAuthSession(session); }, 0);
     });
 
