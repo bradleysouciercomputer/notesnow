@@ -545,6 +545,94 @@
 
     .body-field::part(text-field) { min-height: 270px; }
 
+    .attachment-section {
+      display: grid;
+      gap: 11px;
+      padding-top: 2px;
+    }
+
+    .attachment-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .attachment-heading-label {
+      color: var(--md-sys-color-on-surface);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .attachment-heading md-outlined-button {
+      --md-outlined-button-container-height: 38px;
+      --md-outlined-button-container-shape: var(--md-sys-shape-corner-full);
+    }
+
+    .attachment-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .attachment-row {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 11px;
+      padding: 9px 10px 9px 12px;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: var(--md-sys-shape-corner-medium);
+      background: var(--md-sys-color-surface-container);
+    }
+
+    .attachment-file-icon {
+      flex: 0 0 auto;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .attachment-file-info {
+      display: grid;
+      flex: 1 1 auto;
+      min-width: 0;
+      gap: 2px;
+    }
+
+    .attachment-file-name {
+      overflow: hidden;
+      color: var(--md-sys-color-on-surface);
+      font-size: 13px;
+      line-height: 18px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .attachment-file-size {
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 11px;
+      line-height: 15px;
+    }
+
+    .attachment-row-actions {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .attachment-row-actions md-icon-button {
+      --md-icon-button-icon-size: 20px;
+      --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .attachment-hint {
+      margin: 0;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 12px;
+      line-height: 17px;
+    }
+
+    .attachment-hint[data-kind="error"] { color: var(--md-sys-color-error); }
+
     .note-dialog [slot="actions"],
     .delete-dialog [slot="actions"] { padding: 0 24px 22px; }
 
@@ -617,6 +705,8 @@
       .new-note-fab { --md-fab-container-height: 44px; }
       .editor-fields { min-width: 0; }
       .body-field::part(text-field) { min-height: 220px; }
+      .attachment-heading { align-items: flex-start; }
+      .attachment-heading md-outlined-button { flex: 0 0 auto; }
       .note-dialog [slot="actions"],
       .delete-dialog [slot="actions"] { padding: 0 14px 15px; }
       .snackbar { bottom: 18px; }
@@ -691,6 +781,18 @@
     <div slot="content" class="editor-fields">
       <md-outlined-text-field class="title-field" id="noteTitle" label="Title" maxlength="160"></md-outlined-text-field>
       <md-outlined-text-field class="body-field" id="noteContent" label="Write your note..." type="textarea" rows="10"></md-outlined-text-field>
+      <section class="attachment-section" aria-label="Note attachments">
+        <div class="attachment-heading">
+          <span class="attachment-heading-label">Attachments</span>
+          <md-outlined-button id="attachFilesButton" type="button">
+            <md-icon slot="icon">attach_file</md-icon>
+            Add files
+          </md-outlined-button>
+        </div>
+        <input id="attachmentInput" type="file" multiple hidden>
+        <div class="attachment-list" id="attachmentList"></div>
+        <p class="attachment-hint" id="attachmentHint">Attach files up to 50 MB each. Files stay private to your account.</p>
+      </section>
     </div>
     <div slot="actions">
       <md-text-button id="cancelButton">Cancel</md-text-button>
@@ -760,6 +862,8 @@
     const THEME_KEY = 'notesnow-theme-v1';
     const SUPABASE_URL = 'https://hpntwpdqvyfcnwldslmk.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_hGsKruQPZFkQzfVO7cZMJg_x_erN1Zd';
+    const ATTACHMENTS_BUCKET = 'note-attachments';
+    const MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024;
     const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       auth: {
         persistSession: true,
@@ -805,6 +909,8 @@
     let authMode = 'signin';
     let editingId = null;
     let pendingDeleteId = null;
+    let pendingAttachmentFiles = [];
+    let pendingAttachmentRemovals = new Set();
     let toastTimeout = null;
 
     function loadLegacyNotes() {
@@ -954,7 +1060,7 @@
     async function fetchCloudNotes() {
       return supabase
         .from('notes')
-        .select('id, title, content, created_at, updated_at')
+        .select('id, title, content, attachments, created_at, updated_at')
         .order('updated_at', {ascending: false});
     }
 
@@ -1031,6 +1137,7 @@
         id: note.id,
         title: note.title || '',
         content: note.content || '',
+        attachments: Array.isArray(note.attachments) ? note.attachments : [],
         created_at: note.created_at,
         updated_at: note.updated_at
       }));
@@ -1062,13 +1169,81 @@
       await loadCloudNotes(user);
     }
 
+    function resetEditorAttachmentChanges() {
+      pendingAttachmentFiles = [];
+      pendingAttachmentRemovals = new Set();
+      $('attachmentInput').value = '';
+      $('attachmentHint').textContent = 'Attach files up to 50 MB each. Files stay private to your account.';
+      $('attachmentHint').dataset.kind = 'info';
+    }
+
+    function formatAttachmentSize(bytes) {
+      if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function attachmentIcon(type, name) {
+      const mime = String(type || '').toLowerCase();
+      const extension = String(name || '').split('.').pop().toLowerCase();
+      if (mime.startsWith('image/')) return 'image';
+      if (mime.startsWith('video/')) return 'movie';
+      if (mime.startsWith('audio/')) return 'audio_file';
+      if (mime === 'application/pdf' || extension === 'pdf') return 'picture_as_pdf';
+      if (mime.includes('spreadsheet') || ['csv','xls','xlsx'].includes(extension)) return 'table';
+      if (mime.includes('word') || ['doc','docx'].includes(extension)) return 'description';
+      if (['zip','rar','7z','gz'].includes(extension)) return 'folder_zip';
+      return 'attach_file';
+    }
+
+    function renderEditorAttachments() {
+      const note = editingId ? notes.find((item) => item.id === editingId) : null;
+      const saved = (note?.attachments || []).filter((item) => !pendingAttachmentRemovals.has(item.path));
+      const savedMarkup = saved.map((item) =>
+        '<div class="attachment-row">' +
+          '<md-icon class="attachment-file-icon">' + attachmentIcon(item.type, item.name) + '</md-icon>' +
+          '<div class="attachment-file-info">' +
+            '<span class="attachment-file-name" title="' + escapeHTML(item.name) + '">' + escapeHTML(item.name) + '</span>' +
+            '<span class="attachment-file-size">' + formatAttachmentSize(Number(item.size)) + '</span>' +
+          '</div>' +
+          '<span class="attachment-row-actions">' +
+            '<md-icon-button data-attachment-action="download" data-attachment-path="' + escapeHTML(item.path) + '" aria-label="Download ' + escapeHTML(item.name) + '" title="Download"><md-icon>download</md-icon></md-icon-button>' +
+            '<md-icon-button data-attachment-action="remove" data-attachment-path="' + escapeHTML(item.path) + '" aria-label="Remove ' + escapeHTML(item.name) + '" title="Remove"><md-icon>close</md-icon></md-icon-button>' +
+          '</span>' +
+        '</div>'
+      ).join('');
+
+      const pendingMarkup = pendingAttachmentFiles.map((item) =>
+        '<div class="attachment-row">' +
+          '<md-icon class="attachment-file-icon">' + attachmentIcon(item.file.type, item.file.name) + '</md-icon>' +
+          '<div class="attachment-file-info">' +
+            '<span class="attachment-file-name" title="' + escapeHTML(item.file.name) + '">' + escapeHTML(item.file.name) + '</span>' +
+            '<span class="attachment-file-size">' + formatAttachmentSize(item.file.size) + ' · Ready to upload</span>' +
+          '</div>' +
+          '<span class="attachment-row-actions">' +
+            '<md-icon-button data-attachment-action="remove-pending" data-pending-id="' + escapeHTML(item.id) + '" aria-label="Remove selected ' + escapeHTML(item.file.name) + '" title="Remove"><md-icon>close</md-icon></md-icon-button>' +
+          '</span>' +
+        '</div>'
+      ).join('');
+
+      const removedCount = pendingAttachmentRemovals.size;
+      $('attachmentList').innerHTML = savedMarkup + pendingMarkup;
+      $('attachmentHint').textContent = removedCount
+        ? removedCount + ' attachment' + (removedCount === 1 ? ' is' : 's are') + ' marked for removal when you save.'
+        : 'Attach files up to 50 MB each. Files stay private to your account.';
+      $('attachmentHint').dataset.kind = 'info';
+    }
+
     function openEditor(id = null) {
       const note = id ? notes.find((item) => item.id === id) : null;
       editingId = note ? note.id : null;
+      resetEditorAttachmentChanges();
       $('dialogTitle').textContent = note ? 'Edit note' : 'New note';
       $('saveButton').textContent = note ? 'Save changes' : 'Save note';
       $('noteTitle').value = note ? note.title : '';
       $('noteContent').value = note ? note.content : '';
+      renderEditorAttachments();
       $('noteDialog').open = true;
       requestAnimationFrame(() => $('noteTitle').focus());
     }
@@ -1076,8 +1251,11 @@
     async function saveCurrentNote() {
       const title = $('noteTitle').value.trim();
       const content = $('noteContent').value;
-      if (!title && !content.trim()) {
-        showMessage('Write something before saving your note.');
+      const existingNote = editingId ? notes.find((item) => item.id === editingId) : null;
+      const remainingSavedAttachments = (existingNote?.attachments || [])
+        .filter((item) => !pendingAttachmentRemovals.has(item.path)).length;
+      if (!title && !content.trim() && pendingAttachmentFiles.length === 0 && remainingSavedAttachments === 0) {
+        showMessage('Write something or attach a file before saving your note.');
         $('noteTitle').focus();
         return;
       }
@@ -1086,7 +1264,6 @@
       const button = $('saveButton');
       if (button.disabled) return;
       button.disabled = true;
-      const originalLabel = button.textContent;
       button.textContent = 'Saving...';
 
       try {
@@ -1096,34 +1273,110 @@
             .from('notes')
             .update({title, content})
             .eq('id', editingId)
-            .select('id, title, content, created_at, updated_at')
+            .select('id, title, content, attachments, created_at, updated_at')
             .single();
         } else {
           result = await supabase
             .from('notes')
             .insert({title, content})
-            .select('id, title, content, created_at, updated_at')
+            .select('id, title, content, attachments, created_at, updated_at')
             .single();
         }
 
         if (result.error) throw result.error;
         if (!result.data) throw new Error('The note was not saved.');
 
-        const savedNote = result.data;
+        let savedNote = {
+          ...result.data,
+          attachments: Array.isArray(result.data.attachments) ? result.data.attachments : []
+        };
+        editingId = savedNote.id;
+        $('dialogTitle').textContent = 'Edit note';
         notes = notes.filter((note) => note.id !== savedNote.id);
         notes.push(savedNote);
-        notes.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        renderNotes();
 
+        for (const path of [...pendingAttachmentRemovals]) {
+          const {error: removeError} = await supabase.storage
+            .from(ATTACHMENTS_BUCKET)
+            .remove([path]);
+          if (removeError) throw removeError;
+
+          const nextAttachments = savedNote.attachments.filter((item) => item.path !== path);
+          const updateResult = await supabase
+            .from('notes')
+            .update({attachments: nextAttachments})
+            .eq('id', savedNote.id)
+            .select('id, title, content, attachments, created_at, updated_at')
+            .single();
+          if (updateResult.error) throw updateResult.error;
+
+          savedNote = updateResult.data;
+          savedNote.attachments = Array.isArray(savedNote.attachments) ? savedNote.attachments : [];
+          pendingAttachmentRemovals.delete(path);
+          notes = notes.map((note) => note.id === savedNote.id ? savedNote : note);
+          renderEditorAttachments();
+          renderNotes();
+        }
+
+        while (pendingAttachmentFiles.length) {
+          const pending = pendingAttachmentFiles[0];
+          const safeName = pending.file.name.replace(/[\\/]/g, '_').replace(/[\u0000-\u001f]/g, '_').slice(0, 180) || 'attachment';
+          const path = currentUser.id + '/' + savedNote.id + '/' + createId() + '-' + safeName;
+          const {error: uploadError} = await supabase.storage
+            .from(ATTACHMENTS_BUCKET)
+            .upload(path, pending.file, {
+              cacheControl: '3600',
+              upsert: false,
+              contentType: pending.file.type || 'application/octet-stream'
+            });
+          if (uploadError) throw uploadError;
+
+          const metadata = {
+            id: createId(),
+            name: pending.file.name,
+            path,
+            size: pending.file.size,
+            type: pending.file.type || 'application/octet-stream',
+            uploaded_at: new Date().toISOString()
+          };
+          const nextAttachments = [...savedNote.attachments, metadata];
+          const updateResult = await supabase
+            .from('notes')
+            .update({attachments: nextAttachments})
+            .eq('id', savedNote.id)
+            .select('id, title, content, attachments, created_at, updated_at')
+            .single();
+
+          if (updateResult.error) {
+            await supabase.storage.from(ATTACHMENTS_BUCKET).remove([path]);
+            throw updateResult.error;
+          }
+
+          savedNote = updateResult.data;
+          savedNote.attachments = Array.isArray(savedNote.attachments) ? savedNote.attachments : nextAttachments;
+          pendingAttachmentFiles = pendingAttachmentFiles.filter((item) => item.id !== pending.id);
+          notes = notes.map((note) => note.id === savedNote.id ? savedNote : note);
+          renderEditorAttachments();
+          renderNotes();
+        }
+
+        notes = notes.map((note) => note.id === savedNote.id ? savedNote : note);
+        notes.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
         $('noteDialog').open = false;
         editingId = null;
+        resetEditorAttachmentChanges();
         renderNotes();
         showMessage('Note saved to the cloud');
       } catch (error) {
-        console.error('Could not save cloud note:', error);
-        showMessage(error.message || 'Could not save this note. Try again.');
+        console.error('Could not save note or attachments:', error);
+        $('attachmentHint').textContent = error.message || 'Could not finish saving attachments. Your saved note is kept; try again.';
+        $('attachmentHint').dataset.kind = 'error';
+        showMessage(error.message || 'Could not finish saving. Try again.');
+        renderEditorAttachments();
       } finally {
         button.disabled = false;
-        button.textContent = originalLabel;
+        button.textContent = editingId ? 'Save changes' : 'Save note';
       }
     }
 
@@ -1248,10 +1501,75 @@
 
     $('newNoteButton').addEventListener('click', () => openEditor());
     $('emptyNewNoteButton').addEventListener('click', () => openEditor());
+    $('attachFilesButton').addEventListener('click', () => $('attachmentInput').click());
+
+    $('attachmentInput').addEventListener('change', () => {
+      const files = Array.from($('attachmentInput').files || []);
+      const accepted = [];
+      for (const file of files) {
+        if (file.size > MAX_ATTACHMENT_BYTES) {
+          showMessage(file.name + ' is larger than the 50 MB attachment limit.');
+          continue;
+        }
+        accepted.push({id: createId(), file});
+      }
+      pendingAttachmentFiles.push(...accepted);
+      $('attachmentInput').value = '';
+      renderEditorAttachments();
+    });
+
+    $('attachmentList').addEventListener('click', async (event) => {
+      const actionButton = event.composedPath().find((node) =>
+        node instanceof HTMLElement && node.matches('md-icon-button[data-attachment-action]')
+      );
+      if (!actionButton) return;
+
+      const action = actionButton.dataset.attachmentAction;
+      if (action === 'remove-pending') {
+        const id = actionButton.dataset.pendingId;
+        pendingAttachmentFiles = pendingAttachmentFiles.filter((item) => item.id !== id);
+        renderEditorAttachments();
+        return;
+      }
+
+      const path = actionButton.dataset.attachmentPath;
+      if (action === 'remove') {
+        pendingAttachmentRemovals.add(path);
+        renderEditorAttachments();
+        return;
+      }
+
+      if (action === 'download') {
+        const note = notes.find((item) => item.id === editingId);
+        const attachment = (note?.attachments || []).find((item) => item.path === path);
+        if (!attachment) return;
+        actionButton.disabled = true;
+        try {
+          const {data, error} = await supabase.storage.from(ATTACHMENTS_BUCKET).download(path);
+          if (error) throw error;
+          const url = URL.createObjectURL(data);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = attachment.name || 'attachment';
+          link.style.display = 'none';
+          document.body.append(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+        } catch (error) {
+          console.error('Could not download attachment:', error);
+          showMessage(error.message || 'Could not download this attachment.');
+        } finally {
+          actionButton.disabled = false;
+        }
+      }
+    });
+
     $('saveButton').addEventListener('click', saveCurrentNote);
     $('cancelButton').addEventListener('click', () => {
       $('noteDialog').open = false;
       editingId = null;
+      resetEditorAttachmentChanges();
     });
 
     $('notesList').addEventListener('click', (event) => {
@@ -1322,6 +1640,15 @@
       button.disabled = true;
 
       try {
+        const noteToDelete = notes.find((item) => item.id === id);
+        const attachmentPaths = (noteToDelete?.attachments || []).map((item) => item.path).filter(Boolean);
+        if (attachmentPaths.length) {
+          const {error: attachmentError} = await supabase.storage
+            .from(ATTACHMENTS_BUCKET)
+            .remove(attachmentPaths);
+          if (attachmentError) throw attachmentError;
+        }
+
         const {data, error} = await supabase
           .from('notes')
           .delete()
@@ -1338,10 +1665,11 @@
         if (editingId === id) {
           $('noteDialog').open = false;
           editingId = null;
+          resetEditorAttachmentChanges();
         }
 
         renderNotes();
-        showMessage('Note deleted from the cloud');
+        showMessage('Note and its attachments deleted');
       } catch (error) {
         console.error('Could not delete cloud note:', error);
         showMessage(error.message || 'Could not delete this note. Try again.');
@@ -1367,6 +1695,7 @@
 
     $('noteDialog').addEventListener('cancel', () => {
       editingId = null;
+      resetEditorAttachmentChanges();
     });
 
     renderNotes();
