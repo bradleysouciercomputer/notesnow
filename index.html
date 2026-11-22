@@ -289,7 +289,28 @@
       --md-list-item-supporting-text-size: 14px;
       --md-list-item-supporting-text-color: var(--md-sys-color-on-surface-variant);
       --md-list-item-one-line-container-height: 64px;
-      --md-list-item-two-line-container-height: 80px;
+      --md-list-item-two-line-container-height: 88px;
+    }
+
+    .note-supporting {
+      display: block;
+      min-width: 0;
+    }
+
+    .note-preview {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .note-timestamp {
+      display: block;
+      margin-top: 3px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 16px;
     }
 
     /* The hover/ripple layer fills each row edge-to-edge. Only the outside
@@ -375,6 +396,28 @@
       color: var(--md-sys-color-on-surface-variant);
       font-size: 12px;
       line-height: 16px;
+    }
+
+    .details-timestamps {
+      display: grid;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: var(--md-sys-shape-corner-large);
+      background: var(--md-sys-color-surface-container);
+    }
+
+    .details-timestamp-row {
+      display: grid;
+      gap: 3px;
+    }
+
+    .details-timestamp-row .details-label { margin: 0; }
+
+    .details-timestamp-value {
+      color: var(--md-sys-color-on-surface);
+      font-size: 14px;
+      line-height: 20px;
+      font-variant-numeric: tabular-nums;
     }
 
     .details-stats {
@@ -662,6 +705,16 @@
         <div class="details-label">Title</div>
         <div class="details-note-title" id="noteDetailsTitle">Untitled note</div>
       </div>
+      <div class="details-timestamps">
+        <div class="details-timestamp-row">
+          <span class="details-label">Created</span>
+          <span class="details-timestamp-value" id="noteDetailsCreated">Unknown</span>
+        </div>
+        <div class="details-timestamp-row">
+          <span class="details-label">Last edited</span>
+          <span class="details-timestamp-value" id="noteDetailsUpdated">Unknown</span>
+        </div>
+      </div>
       <div class="details-stats" aria-label="Note content statistics">
         <div class="detail-stat">
           <span class="detail-stat-value" id="noteDetailsWords">0</span>
@@ -793,6 +846,27 @@
       return content.replace(/\s+/g, ' ').trim();
     }
 
+    function formatNoteTimestamp(value) {
+      if (!value) return 'Unknown';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return 'Unknown';
+      return new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      }).format(date);
+    }
+
+    function getNoteTimestampLabel(note) {
+      const created = note.created_at ? new Date(note.created_at).getTime() : NaN;
+      const updated = note.updated_at ? new Date(note.updated_at).getTime() : NaN;
+      const wasEdited = Number.isFinite(created) && Number.isFinite(updated) && updated > created;
+      const timestamp = wasEdited ? note.updated_at : note.created_at || note.updated_at;
+      return (wasEdited ? 'Edited ' : 'Created ') + formatNoteTimestamp(timestamp);
+    }
+
     function renderNotes() {
       const empty = notes.length === 0;
       $('emptyState').hidden = !empty;
@@ -815,7 +889,10 @@
         const menuId = 'note-actions-menu-' + note.id;
         return '<md-list-item type="button" data-note-id="' + escapeHTML(note.id) + '">' +
           '<div slot="headline">' + title + '</div>' +
-          (preview ? '<div slot="supporting-text">' + preview + '</div>' : '') +
+          '<div slot="supporting-text" class="note-supporting">' +
+            (preview ? '<span class="note-preview">' + preview + '</span>' : '') +
+            '<span class="note-timestamp">' + escapeHTML(getNoteTimestampLabel(note)) + '</span>' +
+          '</div>' +
           '<span slot="end" class="note-actions">' +
             '<md-icon-button id="' + escapeHTML(triggerId) + '" data-menu-id="' + escapeHTML(menuId) + '" aria-label="Note actions for ' + title + '" aria-haspopup="menu" aria-expanded="false" title="Note actions"><md-icon>more_vert</md-icon></md-icon-button>' +
             '<md-menu id="' + escapeHTML(menuId) + '" positioning="popover" anchor="' + escapeHTML(triggerId) + '" anchor-corner="end-end" menu-corner="end-start" aria-label="Note actions">' +
@@ -1217,6 +1294,8 @@
       const lineCount = noteContent ? noteContent.split(/\r\n|\r|\n/).length : 0;
 
       $('noteDetailsTitle').textContent = note.title.trim() || 'Untitled note';
+      $('noteDetailsCreated').textContent = formatNoteTimestamp(note.created_at);
+      $('noteDetailsUpdated').textContent = formatNoteTimestamp(note.updated_at || note.created_at);
       $('noteDetailsWords').textContent = wordCount.toLocaleString();
       $('noteDetailsCharacters').textContent = characterCount.toLocaleString();
       $('noteDetailsLines').textContent = lineCount.toLocaleString();
