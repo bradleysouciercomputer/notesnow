@@ -9,6 +9,7 @@ A simple cloud-based notes website built with Google's official Material Web com
 - Delete a note after confirming in a Material 3 confirmation dialog
 - View note details, including word, character, and line counts
 - See when each note was created or last edited, with full timestamps in Note details
+- Attach multiple files to a note, download them later, or remove them when editing
 - Sign up and sign in with an email address and password
 - Reset a forgotten password by email
 - Store notes in Supabase so they are available across devices
@@ -34,7 +35,10 @@ The app connects to the **NotesNow** Supabase project using its project URL and 
 The `public.notes` table stores:
 
 - `id`, `user_id`, `title`, and `content`
+- `attachments` metadata for files belonging to each note
 - `created_at` and `updated_at`
+
+Attachments are stored in the private `note-attachments` Storage bucket. Each file is limited to 50 MB. Storage Row Level Security checks the signed-in user ID and the note ID in the object path before allowing upload, download, or deletion. Deleting a note also removes its stored attachments.
 
 Row Level Security is enabled. Authenticated users can select, insert, update, and delete only rows where `user_id` matches their authenticated user ID.
 
