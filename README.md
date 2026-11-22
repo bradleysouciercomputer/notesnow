@@ -8,6 +8,7 @@ A simple cloud-based notes website built with Google's official Material Web com
 - Open an existing note to edit it
 - Delete a note after confirming in a Material 3 confirmation dialog
 - View note details, including word, character, and line counts
+- See when each note was created or last edited, with full timestamps in Note details
 - Sign up and sign in with an email address and password
 - Reset a forgotten password by email
 - Store notes in Supabase so they are available across devices
