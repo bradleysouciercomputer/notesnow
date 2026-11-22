@@ -769,6 +769,7 @@
     }
 
     .share-dialog [slot="actions"] { padding: 0 24px 22px; }
+    .share-hint[data-kind="error"] { color: var(--md-sys-color-error); }
 
     .delete-dialog {
       width: min(420px, calc(100vw - 28px));
@@ -846,6 +847,23 @@
       .note-dialog [slot="actions"] {
         margin-top: 4px;
         padding-top: 12px;
+      }
+      .share-dialog {
+        width: min(540px, calc(100vw - 20px));
+      }
+      .share-content {
+        min-width: min(420px, calc(100vw - 76px));
+      }
+      .share-invite-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .share-invite-row md-filled-button {
+        justify-self: end;
+      }
+      .share-member-row { gap: 6px; }
+      .share-member-permission {
+        gap: 3px;
+        font-size: 12px;
       }
       .snackbar { bottom: 18px; }
     }
@@ -1356,6 +1374,8 @@
         $('noteDialog').open = false;
         $('deleteDialog').open = false;
         $('detailsDialog').open = false;
+        $('shareDialog').open = false;
+        sharingNoteId = null;
         renderNotes();
         return;
       }
@@ -1498,6 +1518,8 @@
 
         let savedNote = {
           ...result.data,
+          is_owner: result.data.user_id === currentUser.id,
+          shared_permission: existingNote?.shared_permission || null,
           attachments: Array.isArray(result.data.attachments) ? result.data.attachments : []
         };
         editingId = savedNote.id;
@@ -1521,8 +1543,12 @@
             .single();
           if (updateResult.error) throw updateResult.error;
 
-          savedNote = updateResult.data;
-          savedNote.attachments = Array.isArray(savedNote.attachments) ? savedNote.attachments : [];
+          savedNote = {
+            ...updateResult.data,
+            is_owner: updateResult.data.user_id === currentUser.id,
+            shared_permission: existingNote?.shared_permission || null,
+            attachments: Array.isArray(updateResult.data.attachments) ? updateResult.data.attachments : []
+          };
           pendingAttachmentRemovals.delete(path);
           notes = notes.map((note) => note.id === savedNote.id ? savedNote : note);
           renderEditorAttachments();
@@ -1563,8 +1589,12 @@
             throw updateResult.error;
           }
 
-          savedNote = updateResult.data;
-          savedNote.attachments = Array.isArray(savedNote.attachments) ? savedNote.attachments : nextAttachments;
+          savedNote = {
+            ...updateResult.data,
+            is_owner: updateResult.data.user_id === currentUser.id,
+            shared_permission: existingNote?.shared_permission || null,
+            attachments: Array.isArray(updateResult.data.attachments) ? updateResult.data.attachments : nextAttachments
+          };
           pendingAttachmentFiles = pendingAttachmentFiles.filter((item) => item.id !== pending.id);
           notes = notes.map((note) => note.id === savedNote.id ? savedNote : note);
           renderEditorAttachments();
