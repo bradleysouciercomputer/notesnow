@@ -304,6 +304,11 @@
       white-space: nowrap;
     }
 
+    .note-access-label {
+      color: var(--md-sys-color-primary);
+      font-weight: 500;
+    }
+
     .note-timestamp {
       display: block;
       margin-top: 3px;
@@ -653,6 +658,118 @@
       padding-top: 14px;
     }
 
+    .share-dialog {
+      width: min(540px, calc(100vw - 28px));
+      max-width: 540px;
+      --md-dialog-container-color: var(--md-sys-color-surface-container-low);
+      --md-dialog-container-shape: var(--md-sys-shape-corner-extra-large);
+    }
+
+    .share-content {
+      display: grid;
+      gap: 16px;
+      min-width: min(420px, calc(100vw - 88px));
+      padding-top: 3px;
+    }
+
+    .share-description,
+    .share-hint {
+      margin: 0;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 13px;
+      line-height: 19px;
+    }
+
+    .share-invite {
+      display: grid;
+      gap: 12px;
+    }
+
+    .share-invite-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .share-email-field {
+      width: 100%;
+      min-width: 0;
+      --md-outlined-text-field-container-shape: var(--md-sys-shape-corner-large);
+    }
+
+    .share-invite-row md-filled-button {
+      --md-filled-button-container-height: 48px;
+      --md-filled-button-container-shape: var(--md-sys-shape-corner-full);
+    }
+
+    .share-permission-toggle,
+    .share-member-permission {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 13px;
+      line-height: 20px;
+      cursor: pointer;
+    }
+
+    .share-section-heading {
+      margin: 2px 0 -7px;
+      color: var(--md-sys-color-on-surface);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .share-list {
+      display: grid;
+      max-height: 230px;
+      overflow: auto;
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .share-member-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 62px;
+      padding: 8px 0 8px 2px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .share-member-info {
+      display: grid;
+      min-width: 0;
+      gap: 3px;
+    }
+
+    .share-member-email {
+      overflow: hidden;
+      color: var(--md-sys-color-on-surface);
+      font-size: 13px;
+      line-height: 18px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .share-member-date {
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 11px;
+      line-height: 15px;
+    }
+
+    .share-member-permission { white-space: nowrap; }
+    .share-member-row md-icon-button { --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant); }
+    .share-empty {
+      padding: 16px 2px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 13px;
+      line-height: 19px;
+    }
+
+    .share-dialog [slot="actions"] { padding: 0 24px 22px; }
+
     .delete-dialog {
       width: min(420px, calc(100vw - 28px));
       max-width: 420px;
@@ -780,7 +897,7 @@
 
     <section id="notesContent" hidden>
       <section class="page-heading">
-        <h1 class="md-typescale-headline-large">Your notes</h1>
+        <h1 class="md-typescale-headline-large">Notes</h1>
       </section>
       <section id="notesArea" aria-label="Your notes">
       <div class="empty-state" id="emptyState">
@@ -812,7 +929,7 @@
         </div>
         <input id="attachmentInput" type="file" multiple hidden>
         <div class="attachment-list" id="attachmentList"></div>
-        <p class="attachment-hint" id="attachmentHint">Attach files up to 50 MB each. Files stay private to your account.</p>
+        <p class="attachment-hint" id="attachmentHint">Attach files up to 50 MB each. Attachments are private and available only to people with access to this note.</p>
       </section>
     </div>
     <div slot="actions">
@@ -866,6 +983,31 @@
     <div slot="actions">
       <md-text-button id="cancelDeleteButton">Cancel</md-text-button>
       <md-filled-button id="confirmDeleteButton">Delete</md-filled-button>
+    </div>
+  </md-dialog>
+
+  <md-dialog class="share-dialog" id="shareDialog" aria-labelledby="shareDialogTitle">
+    <div slot="headline" class="dialog-headline" id="shareDialogTitle">Share note</div>
+    <div slot="content" class="share-content">
+      <p class="share-description" id="shareDescription">Share this note with another NotesNow account.</p>
+      <div class="share-invite">
+        <div class="share-invite-row">
+          <md-outlined-text-field class="share-email-field" id="shareEmailField" type="email" label="Email address" autocomplete="off"></md-outlined-text-field>
+          <md-filled-button id="shareInviteButton">Share</md-filled-button>
+        </div>
+        <label class="share-permission-toggle">
+          <md-checkbox id="shareCanEdit"></md-checkbox>
+          <span>Allow editing</span>
+        </label>
+      </div>
+      <div class="share-section-heading">People with access</div>
+      <div class="share-list" id="shareMemberList">
+        <div class="share-empty">Loading access...</div>
+      </div>
+      <p class="share-hint" id="shareHint" role="status" aria-live="polite">Only people with a NotesNow account can be added.</p>
+    </div>
+    <div slot="actions">
+      <md-text-button id="closeShareButton">Close</md-text-button>
     </div>
   </md-dialog>
 
@@ -930,6 +1072,7 @@
     let authMode = 'signin';
     let editingId = null;
     let pendingDeleteId = null;
+    let sharingNoteId = null;
     let pendingAttachmentFiles = [];
     let pendingAttachmentRemovals = new Set();
     let toastTimeout = null;
@@ -994,6 +1137,12 @@
       return (wasEdited ? 'Edited ' : 'Created ') + formatNoteTimestamp(timestamp);
     }
 
+    function canEditNote(note) {
+      return Boolean(note && currentUser && (
+        note.user_id === currentUser.id || note.shared_permission === 'editor'
+      ));
+    }
+
     function renderNotes() {
       const empty = notes.length === 0;
       $('emptyState').hidden = !empty;
@@ -1012,23 +1161,34 @@
       const markup = notes.map((note) => {
         const title = escapeHTML(note.title || 'Untitled note');
         const preview = escapeHTML(notePreview(note.content));
+        const noteId = escapeHTML(note.id);
         const triggerId = 'note-actions-trigger-' + note.id;
         const menuId = 'note-actions-menu-' + note.id;
-        return '<md-list-item type="button" data-note-id="' + escapeHTML(note.id) + '">' +
+        const isOwner = note.user_id === currentUser?.id;
+        const canEdit = canEditNote(note);
+        const accessLabel = isOwner ? '' :
+          '<span class="note-access-label">Shared with you · ' +
+          (note.shared_permission === 'editor' ? 'Can edit' : 'View only') +
+          '</span> · ';
+        const menuItems =
+          '<md-menu-item data-action="details" data-note-id="' + noteId + '"><md-icon slot="start">info</md-icon><div slot="headline">Note details</div></md-menu-item>' +
+          '<md-menu-item data-action="' + (canEdit ? 'edit' : 'view') + '" data-note-id="' + noteId + '"><md-icon slot="start">' + (canEdit ? 'edit' : 'visibility') + '</md-icon><div slot="headline">' + (canEdit ? 'Edit' : 'View') + '</div></md-menu-item>' +
+          (isOwner ? '<md-menu-item data-action="share" data-note-id="' + noteId + '"><md-icon slot="start">person_add</md-icon><div slot="headline">Share</div></md-menu-item>' : '') +
+          (isOwner ? '<md-menu-item data-action="delete" data-note-id="' + noteId + '"><md-icon slot="start">delete</md-icon><div slot="headline">Delete</div></md-menu-item>' : '');
+
+        return '<md-list-item type="button" data-note-id="' + noteId + '">' +
           '<div slot="headline">' + title + '</div>' +
           '<div slot="supporting-text" class="note-supporting">' +
             (preview ? '<span class="note-preview">' + preview + '</span>' : '') +
-            '<span class="note-timestamp">' + escapeHTML(getNoteTimestampLabel(note)) + '</span>' +
+            '<span class="note-timestamp">' + accessLabel + escapeHTML(getNoteTimestampLabel(note)) + '</span>' +
           '</div>' +
           '<span slot="end" class="note-actions">' +
             '<md-icon-button id="' + escapeHTML(triggerId) + '" data-menu-id="' + escapeHTML(menuId) + '" aria-label="Note actions for ' + title + '" aria-haspopup="menu" aria-expanded="false" title="Note actions"><md-icon>more_vert</md-icon></md-icon-button>' +
             '<md-menu id="' + escapeHTML(menuId) + '" positioning="popover" anchor="' + escapeHTML(triggerId) + '" anchor-corner="end-end" menu-corner="end-start" aria-label="Note actions">' +
-              '<md-menu-item data-action="details" data-note-id="' + escapeHTML(note.id) + '"><md-icon slot="start">info</md-icon><div slot="headline">Note details</div></md-menu-item>' +
-              '<md-menu-item data-action="edit" data-note-id="' + escapeHTML(note.id) + '"><md-icon slot="start">edit</md-icon><div slot="headline">Edit</div></md-menu-item>' +
-              '<md-menu-item data-action="delete" data-note-id="' + escapeHTML(note.id) + '"><md-icon slot="start">delete</md-icon><div slot="headline">Delete</div></md-menu-item>' +
+              menuItems +
             '</md-menu>' +
           '</span>' +
-          '</md-list-item>';
+        '</md-list-item>';
       }).join('<md-divider></md-divider>');
 
       $('notesList').innerHTML = markup;
@@ -1081,7 +1241,7 @@
     async function fetchCloudNotes() {
       return supabase
         .from('notes')
-        .select('id, title, content, attachments, created_at, updated_at')
+        .select('id, user_id, title, content, attachments, created_at, updated_at')
         .order('updated_at', {ascending: false});
     }
 
@@ -1108,7 +1268,7 @@
 
       if (!importChecked) {
         const legacyNotes = loadLegacyNotes();
-        if (legacyNotes.length && data.length === 0) {
+        if (legacyNotes.length && data.filter((note) => note.user_id === user.id).length === 0) {
           const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
           const migratedNotes = legacyNotes.map((note) => ({
             id: uuidPattern.test(note.id) ? note.id : createId(),
@@ -1139,7 +1299,7 @@
           } catch (storageError) {
             console.warn('Could not save local note import status:', storageError);
           }
-          if (legacyNotes.length && data.length) {
+          if (legacyNotes.length && data.some((note) => note.user_id === user.id)) {
             showMessage('Older browser notes were left on this device; this account already has cloud notes.');
           }
         }
@@ -1154,8 +1314,24 @@
         return;
       }
 
+      const {data: shareRows, error: shareError} = await supabase
+        .from('note_shares')
+        .select('note_id, permission')
+        .eq('shared_with_user_id', user.id);
+      if (shareError) {
+        console.error('Could not load shared-note permissions:', shareError);
+        notesLoading = false;
+        renderNotes();
+        showMessage('Could not load shared-note access. Please reload the page.');
+        return;
+      }
+      const sharedPermissions = new Map((shareRows || []).map((share) => [share.note_id, share.permission]));
+
       notes = (data || []).map((note) => ({
         id: note.id,
+        user_id: note.user_id,
+        is_owner: note.user_id === user.id,
+        shared_permission: sharedPermissions.get(note.id) || null,
         title: note.title || '',
         content: note.content || '',
         attachments: Array.isArray(note.attachments) ? note.attachments : [],
@@ -1194,7 +1370,7 @@
       pendingAttachmentFiles = [];
       pendingAttachmentRemovals = new Set();
       $('attachmentInput').value = '';
-      $('attachmentHint').textContent = 'Attach files up to 50 MB each. Files stay private to your account.';
+      $('attachmentHint').textContent = 'Attach files up to 50 MB each. Attachments are private and available only to people with access to this note.';
       $('attachmentHint').dataset.kind = 'info';
     }
 
@@ -1220,6 +1396,7 @@
 
     function renderEditorAttachments() {
       const note = editingId ? notes.find((item) => item.id === editingId) : null;
+      const canEdit = !note || canEditNote(note);
       const saved = (note?.attachments || []).filter((item) => !pendingAttachmentRemovals.has(item.path));
       const savedMarkup = saved.map((item) =>
         '<div class="attachment-row">' +
@@ -1230,7 +1407,7 @@
           '</div>' +
           '<span class="attachment-row-actions">' +
             '<md-icon-button data-attachment-action="download" data-attachment-path="' + escapeHTML(item.path) + '" aria-label="Download ' + escapeHTML(item.name) + '" title="Download"><md-icon>download</md-icon></md-icon-button>' +
-            '<md-icon-button data-attachment-action="remove" data-attachment-path="' + escapeHTML(item.path) + '" aria-label="Remove ' + escapeHTML(item.name) + '" title="Remove"><md-icon>close</md-icon></md-icon-button>' +
+            (canEdit ? '<md-icon-button data-attachment-action="remove" data-attachment-path="' + escapeHTML(item.path) + '" aria-label="Remove ' + escapeHTML(item.name) + '" title="Remove"><md-icon>close</md-icon></md-icon-button>' : '') +
           '</span>' +
         '</div>'
       ).join('');
@@ -1250,18 +1427,26 @@
 
       const removedCount = pendingAttachmentRemovals.size;
       $('attachmentList').innerHTML = savedMarkup + pendingMarkup;
-      $('attachmentHint').textContent = removedCount
-        ? removedCount + ' attachment' + (removedCount === 1 ? ' is' : 's are') + ' marked for removal when you save.'
-        : 'Attach files up to 50 MB each. Files stay private to your account.';
+      $('attachmentHint').textContent = !canEdit
+        ? 'You have view-only access. You can download attached files.'
+        : removedCount
+          ? removedCount + ' attachment' + (removedCount === 1 ? ' is' : 's are') + ' marked for removal when you save.'
+          : 'Attachments are private and available only to people with access to this note.';
       $('attachmentHint').dataset.kind = 'info';
     }
 
     function openEditor(id = null) {
       const note = id ? notes.find((item) => item.id === id) : null;
       editingId = note ? note.id : null;
+      const canEdit = !note || canEditNote(note);
       resetEditorAttachmentChanges();
-      $('dialogTitle').textContent = note ? 'Edit note' : 'New note';
+      $('dialogTitle').textContent = !note ? 'New note' : canEdit ? 'Edit note' : 'View note';
       $('saveButton').textContent = note ? 'Save changes' : 'Save note';
+      $('saveButton').hidden = !canEdit;
+      $('attachFilesButton').hidden = !canEdit;
+      $('noteTitle').readOnly = !canEdit;
+      $('noteContent').readOnly = !canEdit;
+      $('cancelButton').textContent = canEdit ? 'Cancel' : 'Close';
       $('noteTitle').value = note ? note.title : '';
       $('noteContent').value = note ? note.content : '';
       renderEditorAttachments();
@@ -1273,6 +1458,10 @@
       const title = $('noteTitle').value.trim();
       const content = $('noteContent').value;
       const existingNote = editingId ? notes.find((item) => item.id === editingId) : null;
+      if (existingNote && !canEditNote(existingNote)) {
+        showMessage('You only have view access to this note.');
+        return;
+      }
       const remainingSavedAttachments = (existingNote?.attachments || [])
         .filter((item) => !pendingAttachmentRemovals.has(item.path)).length;
       if (!title && !content.trim() && pendingAttachmentFiles.length === 0 && remainingSavedAttachments === 0) {
@@ -1294,13 +1483,13 @@
             .from('notes')
             .update({title, content})
             .eq('id', editingId)
-            .select('id, title, content, attachments, created_at, updated_at')
+            .select('id, user_id, title, content, attachments, created_at, updated_at')
             .single();
         } else {
           result = await supabase
             .from('notes')
             .insert({title, content})
-            .select('id, title, content, attachments, created_at, updated_at')
+            .select('id, user_id, title, content, attachments, created_at, updated_at')
             .single();
         }
 
@@ -1328,7 +1517,7 @@
             .from('notes')
             .update({attachments: nextAttachments})
             .eq('id', savedNote.id)
-            .select('id, title, content, attachments, created_at, updated_at')
+            .select('id, user_id, title, content, attachments, created_at, updated_at')
             .single();
           if (updateResult.error) throw updateResult.error;
 
@@ -1343,7 +1532,7 @@
         while (pendingAttachmentFiles.length) {
           const pending = pendingAttachmentFiles[0];
           const safeName = pending.file.name.replace(/[\\/]/g, '_').replace(/[\u0000-\u001f]/g, '_').slice(0, 180) || 'attachment';
-          const path = currentUser.id + '/' + savedNote.id + '/' + createId() + '-' + safeName;
+          const path = (savedNote.user_id || currentUser.id) + '/' + savedNote.id + '/' + createId() + '-' + safeName;
           const {error: uploadError} = await supabase.storage
             .from(ATTACHMENTS_BUCKET)
             .upload(path, pending.file, {
@@ -1366,7 +1555,7 @@
             .from('notes')
             .update({attachments: nextAttachments})
             .eq('id', savedNote.id)
-            .select('id, title, content, attachments, created_at, updated_at')
+            .select('id, user_id, title, content, attachments, created_at, updated_at')
             .single();
 
           if (updateResult.error) {
@@ -1601,7 +1790,8 @@
       if (menuAction) {
         const id = menuAction.dataset.noteId;
         if (menuAction.dataset.action === 'details') openNoteDetails(id);
-        if (menuAction.dataset.action === 'edit') openEditor(id);
+        if (menuAction.dataset.action === 'edit' || menuAction.dataset.action === 'view') openEditor(id);
+        if (menuAction.dataset.action === 'share') void openShareDialog(id);
         if (menuAction.dataset.action === 'delete') requestDeleteNote(id);
         return;
       }
@@ -1639,6 +1829,136 @@
       $('noteDetailsCharacters').textContent = characterCount.toLocaleString();
       $('noteDetailsLines').textContent = lineCount.toLocaleString();
       $('detailsDialog').open = true;
+    }
+
+    async function loadShareMembers() {
+      if (!sharingNoteId) return;
+      const list = $('shareMemberList');
+      list.innerHTML = '<div class="share-empty">Loading access...</div>';
+      const {data, error} = await supabase
+        .from('note_shares')
+        .select('id, shared_with_email, permission, created_at')
+        .eq('note_id', sharingNoteId)
+        .order('created_at', {ascending: true});
+      if (error) {
+        console.error('Could not load note shares:', error);
+        list.innerHTML = '<div class="share-empty">Could not load access. Close this dialog and try again.</div>';
+        return;
+      }
+
+      if (!data?.length) {
+        list.innerHTML = '<div class="share-empty">This note has not been shared yet.</div>';
+        return;
+      }
+
+      list.innerHTML = data.map((share) =>
+        '<div class="share-member-row">' +
+          '<div class="share-member-info">' +
+            '<span class="share-member-email" title="' + escapeHTML(share.shared_with_email) + '">' + escapeHTML(share.shared_with_email) + '</span>' +
+            '<span class="share-member-date">Added ' + escapeHTML(formatNoteTimestamp(share.created_at)) + '</span>' +
+          '</div>' +
+          '<label class="share-member-permission">' +
+            '<md-checkbox data-share-id="' + escapeHTML(share.id) + '" ' + (share.permission === 'editor' ? 'checked' : '') + '></md-checkbox>' +
+            '<span>Can edit</span>' +
+          '</label>' +
+          '<md-icon-button data-remove-share-id="' + escapeHTML(share.id) + '" aria-label="Remove access for ' + escapeHTML(share.shared_with_email) + '" title="Remove access"><md-icon>close</md-icon></md-icon-button>' +
+        '</div>'
+      ).join('');
+    }
+
+    async function openShareDialog(id) {
+      const note = notes.find((item) => item.id === id);
+      if (!note || note.user_id !== currentUser?.id) return;
+      sharingNoteId = id;
+      $('shareDescription').textContent = 'Share “' + (note.title.trim() || 'Untitled note') + '” with another NotesNow account.';
+      $('shareEmailField').value = '';
+      $('shareCanEdit').checked = false;
+      $('shareHint').textContent = 'Only people with a NotesNow account can be added.';
+      $('shareHint').dataset.kind = 'info';
+      $('shareDialog').open = true;
+      await loadShareMembers();
+    }
+
+    async function inviteToNote() {
+      if (!sharingNoteId || !currentUser) return;
+      const email = $('shareEmailField').value.trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        $('shareHint').textContent = 'Enter a valid email address.';
+        $('shareHint').dataset.kind = 'error';
+        $('shareEmailField').focus();
+        return;
+      }
+
+      const button = $('shareInviteButton');
+      if (button.disabled) return;
+      button.disabled = true;
+      button.textContent = 'Sharing...';
+      $('shareHint').textContent = 'Checking the account and updating access...';
+      $('shareHint').dataset.kind = 'info';
+
+      try {
+        const {error} = await supabase.functions.invoke('share-note-by-email', {
+          body: {
+            noteId: sharingNoteId,
+            email,
+            permission: $('shareCanEdit').checked ? 'editor' : 'viewer'
+          }
+        });
+        if (error) {
+          let message = error.message || 'Could not share this note.';
+          try {
+            const detail = await error.context?.json();
+            if (detail?.error) message = detail.error;
+          } catch (_) {}
+          throw new Error(message);
+        }
+
+        $('shareEmailField').value = '';
+        $('shareCanEdit').checked = false;
+        $('shareHint').textContent = 'Access granted. This note will appear in their NotesNow list.';
+        $('shareHint').dataset.kind = 'info';
+        showMessage('Note shared with ' + email);
+        await loadShareMembers();
+      } catch (error) {
+        console.error('Could not share note:', error);
+        $('shareHint').textContent = error.message || 'Could not share this note. Try again.';
+        $('shareHint').dataset.kind = 'error';
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Share';
+      }
+    }
+
+    async function updateSharePermission(shareId, canEdit) {
+      if (!sharingNoteId) return;
+      const {error} = await supabase
+        .from('note_shares')
+        .update({permission: canEdit ? 'editor' : 'viewer'})
+        .eq('id', shareId)
+        .eq('note_id', sharingNoteId);
+      if (error) {
+        console.error('Could not update share permission:', error);
+        showMessage('Could not update access. Try again.');
+        await loadShareMembers();
+        return;
+      }
+      showMessage(canEdit ? 'Editing access granted' : 'Editing access removed');
+    }
+
+    async function removeNoteShare(shareId) {
+      if (!sharingNoteId) return;
+      const {error} = await supabase
+        .from('note_shares')
+        .delete()
+        .eq('id', shareId)
+        .eq('note_id', sharingNoteId);
+      if (error) {
+        console.error('Could not revoke note access:', error);
+        showMessage('Could not remove access. Try again.');
+        return;
+      }
+      showMessage('Note access removed');
+      await loadShareMembers();
     }
 
     function requestDeleteNote(id) {
@@ -1701,6 +2021,30 @@
 
     $('closeDetailsButton').addEventListener('click', () => {
       $('detailsDialog').open = false;
+    });
+
+    $('shareInviteButton').addEventListener('click', inviteToNote);
+    $('shareEmailField').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') inviteToNote();
+    });
+    $('closeShareButton').addEventListener('click', () => {
+      $('shareDialog').open = false;
+      sharingNoteId = null;
+    });
+    $('shareDialog').addEventListener('cancel', () => {
+      sharingNoteId = null;
+    });
+    $('shareMemberList').addEventListener('change', (event) => {
+      const checkbox = event.composedPath().find((node) =>
+        node instanceof HTMLElement && node.matches('md-checkbox[data-share-id]')
+      );
+      if (checkbox) void updateSharePermission(checkbox.dataset.shareId, checkbox.checked);
+    });
+    $('shareMemberList').addEventListener('click', (event) => {
+      const removeButton = event.composedPath().find((node) =>
+        node instanceof HTMLElement && node.matches('md-icon-button[data-remove-share-id]')
+      );
+      if (removeButton) void removeNoteShare(removeButton.dataset.removeShareId);
     });
 
     $('cancelDeleteButton').addEventListener('click', () => {
