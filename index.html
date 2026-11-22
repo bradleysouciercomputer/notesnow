@@ -1370,10 +1370,10 @@
         showMessage('Note saved to the cloud');
       } catch (error) {
         console.error('Could not save note or attachments:', error);
+        renderEditorAttachments();
         $('attachmentHint').textContent = error.message || 'Could not finish saving attachments. Your saved note is kept; try again.';
         $('attachmentHint').dataset.kind = 'error';
         showMessage(error.message || 'Could not finish saving. Try again.');
-        renderEditorAttachments();
       } finally {
         button.disabled = false;
         button.textContent = editingId ? 'Save changes' : 'Save note';
