@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#f8fafd">
   <meta name="description" content="A simple place to create and keep your notes.">
   <title>NotesNow</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/notesnow-logo.svg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -136,15 +137,18 @@
     .brand-icon {
       width: 42px;
       height: 42px;
-      display: grid;
-      place-items: center;
-      border-radius: 14px;
-      background: var(--md-sys-color-primary-container);
-      color: var(--md-sys-color-on-primary-container);
       flex: 0 0 auto;
+      overflow: hidden;
+      border-radius: 14px;
     }
 
-    .brand-icon md-icon { font-size: 23px; }
+    .brand-icon img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      object-fit: cover;
+    }
     .brand-name { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -.35px; }
 
     .app-bar-actions {
@@ -194,16 +198,19 @@
     }
 
     .auth-card-icon {
-      display: grid;
       width: 56px;
       height: 56px;
-      place-items: center;
+      overflow: hidden;
       border-radius: 18px;
-      background: var(--md-sys-color-primary-container);
-      color: var(--md-sys-color-on-primary-container);
     }
 
-    .auth-card-icon md-icon { font-size: 29px; }
+    .auth-card-icon img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      object-fit: cover;
+    }
 
     .auth-card h1 {
       margin: 0;
@@ -877,7 +884,7 @@
 <body>
   <header class="app-bar">
     <div class="brand">
-      <span class="brand-icon"><md-icon>sticky_note_2</md-icon></span>
+      <span class="brand-icon"><img src="./assets/notesnow-logo.svg" alt="" width="42" height="42"></span>
       <span class="brand-name">NotesNow</span>
     </div>
     <div class="app-bar-actions">
@@ -897,7 +904,7 @@
   <main>
     <section class="auth-view" id="authView" aria-labelledby="authHeading">
       <div class="auth-card">
-        <div class="auth-card-icon"><md-icon>cloud_sync</md-icon></div>
+        <div class="auth-card-icon"><img src="./assets/notesnow-logo.svg" alt="" width="56" height="56"></div>
         <h1 id="authHeading">Welcome to NotesNow</h1>
         <p class="auth-description" id="authDescription">Sign in to access your notes from any device.</p>
         <div class="auth-fields">
