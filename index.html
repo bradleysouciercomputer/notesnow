@@ -565,8 +565,20 @@
     }
 
     .attachment-heading md-outlined-button {
-      --md-outlined-button-container-height: 38px;
+      --md-outlined-button-container-height: 40px;
       --md-outlined-button-container-shape: var(--md-sys-shape-corner-full);
+      --md-outlined-button-icon-size: 20px;
+    }
+
+    #attachFilesButton md-icon[slot="icon"] {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      font-size: 20px;
+      line-height: 24px;
     }
 
     .attachment-list {
@@ -635,6 +647,11 @@
 
     .note-dialog [slot="actions"],
     .delete-dialog [slot="actions"] { padding: 0 24px 22px; }
+
+    .note-dialog [slot="actions"] {
+      margin-top: 4px;
+      padding-top: 14px;
+    }
 
     .delete-dialog {
       width: min(420px, calc(100vw - 28px));
@@ -709,6 +726,10 @@
       .attachment-heading md-outlined-button { flex: 0 0 auto; }
       .note-dialog [slot="actions"],
       .delete-dialog [slot="actions"] { padding: 0 14px 15px; }
+      .note-dialog [slot="actions"] {
+        margin-top: 4px;
+        padding-top: 12px;
+      }
       .snackbar { bottom: 18px; }
     }
 
